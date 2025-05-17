@@ -1,0 +1,14 @@
+{
+    "name": "mi-robot-lector",
+    "version": "0.0.1",
+    "description": "Mi robot para leer artículos",
+    "dependencies": {
+        "apify": "^3.0.0",
+        "puppeteer": "^19.0.0"
+    },
+    "scripts": {
+        "start": "node main.js"
+    },
+    "author": "Lewis79",
+    "license": "ISC"
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Input para Mi Robot de Artículos",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "startUrl": {
+      "title": "Página Web de Inicio",
+      "type": "string",
+      "description": "Escribe aquí la dirección web de la página que tiene la lista de artículos (ej. https://www.shape.com).",
+      "editor": "textfield",
+      "prefill": "https://www.shape.com"
+    }
+  },
+  "required": ["startUrl"]
+}
