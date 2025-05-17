@@ -1,8 +1,8 @@
 // main.js - Instrucciones para nuestro robot
-const Apify = require('apify');
-const log = Apify.log;  // Para escribir mensajes que podamos ver
+const Actor = require('apify');
+const log = Actor.log;  // Para escribir mensajes que podamos ver
 
-Apify.main(async () => {
+Actor.main(async () => {
     log.info('🤖 ¡Hola! Soy el robot de artículos, comenzando mi trabajo...');
 
     // 1. Recibir la dirección web de la lista de artículos
