@@ -1,6 +1,6 @@
 // main.js - Instrucciones para nuestro robot
 const Apify = require('apify');
-const { log } = Apify.utils; // Para escribir mensajes que podamos ver
+const log = Apify.log;  // Para escribir mensajes que podamos ver
 
 Apify.main(async () => {
     log.info('🤖 ¡Hola! Soy el robot de artículos, comenzando mi trabajo...');
