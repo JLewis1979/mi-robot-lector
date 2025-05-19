@@ -1,18 +1,23 @@
 // main.js - Instrucciones para nuestro robot
-const { Actor } = require('apify'); // <--- CAMBIO CLAVE AQUÍ
+const { Actor, PuppeteerCrawler } = require('apify');
 
-// Actor.main ya está disponible directamente
+// Asegúrate de que Actor está inicializado antes de usar Actor.log si lo defines fuera de main.
+// No es estrictamente necesario con Actor.main, pero no hace daño ser explícito.
+// await Actor.init(); // Podrías añadir esto si el problema persistiera, pero probemos sin él primero.
+
 Actor.main(async () => {
-    const log = Actor.log; // Obtener el logger DESPUÉS de Actor.main o directamente
+    // Obtén el logger directamente de Actor cada vez o así:
+    const log = Actor.log; // Esto debería funcionar bien aquí.
+
+    // Línea donde antes estaba el error (ahora podría ser una línea diferente si añadiste Actor.init())
     log.info('🤖 ¡Hola! Soy el robot de artículos, comenzando mi trabajo...');
 
-    // 1. Recibir la dirección web de la lista de artículos
-    const input = await Actor.getInput(); // <--- CAMBIO AQUÍ TAMBIÉN
+    const input = await Actor.getInput();
     const paginaDeListaDeArticulos = input.startUrl;
 
     if (!paginaDeListaDeArticulos) {
         log.error('🆘 ¡Oh no! No me diste una "startUrl" para empezar. No puedo trabajar así.');
-        await Actor.exit(1); // Mejor forma de salir con error
+        await Actor.exit(1);
         return;
     }
     log.info(`🗺️ Voy a empezar mirando esta página: ${paginaDeListaDeArticulos}`);
