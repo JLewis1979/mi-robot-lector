@@ -1,56 +1,53 @@
 // main.js - Instrucciones para nuestro robot
-const { Actor, PuppeteerCrawler } = require('apify');
+const Apify = require('apify'); // Importar el módulo Apify completo
 
-Actor.main(async () => {
-    Actor.log.info('🤖 ¡Hola! Soy el robot de artículos, comenzando mi trabajo...');
+// Usar Apify.Actor.main en lugar de Actor.main
+Apify.Actor.main(async () => {
+    // Usar Apify.Actor.log en lugar de Actor.log
+    Apify.Actor.log.info('🤖 ¡Hola! Soy el robot de artículos, comenzando mi trabajo...');
 
     // 1. Recibir la dirección web de la lista de artículos
-    const input = await Actor.getInput();
+    const input = await Apify.Actor.getInput(); // Usar Apify.Actor.getInput
     const paginaDeListaDeArticulos = input.startUrl;
 
     if (!paginaDeListaDeArticulos) {
-        Actor.log.error('🆘 ¡Oh no! No me diste una "startUrl" para empezar. No puedo trabajar así.');
-        await Actor.exit(1); // Terminar el trabajo con código de error
+        Apify.Actor.log.error('🆘 ¡Oh no! No me diste una "startUrl" para empezar. No puedo trabajar así.');
+        await Apify.Actor.exit(1);
         return;
     }
-    Actor.log.info(`🗺️ Voy a empezar mirando esta página: ${paginaDeListaDeArticulos}`);
+    Apify.Actor.log.info(`🗺️ Voy a empezar mirando esta página: ${paginaDeListaDeArticulos}`);
 
     // 2. Preparar una "lista de tareas pendientes" para las páginas a visitar
-    const colaDePaginas = await Actor.openRequestQueue();
+    const colaDePaginas = await Apify.Actor.openRequestQueue(); // Usar Apify.Actor.openRequestQueue
     await colaDePaginas.addRequest({
         url: paginaDeListaDeArticulos,
-        userData: { tipoDePagina: 'LISTA_DE_ARTICULOS' }, // Una etiqueta para saber qué hacer
+        userData: { tipoDePaginA: 'LISTA_DE_ARTICULOS' },
     });
 
     // 3. Crear el "navegador robot" que visitará las páginas
-    const navegadorRobot = new PuppeteerCrawler({
-        requestQueue: colaDePaginas, // Usará nuestra lista de tareas
+    // PuppeteerCrawler es una propiedad de Apify, no de Apify.Actor
+    const navegadorRobot = new Apify.PuppeteerCrawler({ // Usar Apify.PuppeteerCrawler
+        requestQueue: colaDePaginas,
         launchContext: {
-            launchOptions: { // Se recomienda usar launchOptions para argumentos
+            launchOptions: {
                 args: ['--no-sandbox', '--disable-setuid-sandbox'],
             },
-            useChrome: true, // Recomendado para Puppeteer en Apify
+            useChrome: true,
         },
-        minConcurrency: 1, // Visitar 1 página a la vez (para empezar)
-        maxConcurrency: 1, // Visitar 1 página a la vez (para empezar)
-        maxRequestRetries: 1, // Si una página falla, intentarlo 1 vez más
-        handlePageTimeoutSecs: 180, // Tiempo máximo para procesar una página (3 minutos)
+        minConcurrency: 1,
+        maxConcurrency: 1,
+        maxRequestRetries: 1,
+        handlePageTimeoutSecs: 180,
 
-        // 4. QUÉ HACER EN CADA PÁGINA QUE VISITE EL NAVEGADOR ROBOT
-        // Usamos 'log' desestructurado aquí, que es el logger específico de la página
         handlePageFunction: async ({ request, page, log: pageLog }) => {
             const urlActual = request.url;
-            const tipoDePagina = request.userData.tipoDePagina;
+            const tipoDePagina = request.userData.tipoDePagina; // Corregido: era tipoDePaginA
 
             pageLog.info(`📄 Estoy en [${tipoDePagina}]: ${urlActual}`);
 
             if (tipoDePagina === 'LISTA_DE_ARTICULOS') {
-                // --- ESTAMOS EN LA PÁGINA QUE TIENE LA LISTA DE ARTÍCULOS ---
                 pageLog.info('   🧐 Es una lista. Voy a buscar los enlaces a cada artículo...');
-
-                // ***** ¡¡¡NECESITAS CAMBIAR ESTO PARA TU SITIO WEB ESPECÍFICO (ej. shape.com)!!! *****
-                const SELECTOR_DE_ENLACES_A_ARTICULOS = 'a.card__title-link'; // EJEMPLO PARA INTENTAR CON SHAPE.COM
-
+                const SELECTOR_DE_ENLACES_A_ARTICULOS = 'a.card__title-link';
                 pageLog.info(`      Usando selector para enlaces de lista: "${SELECTOR_DE_ENLACES_A_ARTICULOS}"`);
 
                 const urlsDeArticulos = await page.evaluate((selector) => {
@@ -69,7 +66,7 @@ Actor.main(async () => {
                 } else {
                     pageLog.warning('      ⚠️ ¡No encontré ningún enlace con ese selector! Revisa el SELECTOR_DE_ENLACES_A_ARTICULOS.');
                     const htmlDePaginaLista = await page.content();
-                    await Actor.setValue('DEBUG_PAGINA_LISTA_HTML', htmlDePaginaLista, { contentType: 'text/html' });
+                    await Apify.Actor.setValue('DEBUG_PAGINA_LISTA_HTML', htmlDePaginaLista, { contentType: 'text/html' }); // Usar Apify.Actor.setValue
                     pageLog.info('      (Guardé el HTML de esta página de lista como "DEBUG_PAGINA_LISTA_HTML" para que lo revises en el Key-Value Store de Apify)');
                 }
 
@@ -87,15 +84,9 @@ Actor.main(async () => {
                 }
 
             } else if (tipoDePagina === 'PAGINA_DE_ARTICULO') {
-                // --- ESTAMOS EN LA PÁGINA DE UN ARTÍCULO INDIVIDUAL ---
                 pageLog.info('   ✍️ Es la página de un artículo. Voy a extraer la información...');
-
-                // ***** ¡¡¡NECESITAS CAMBIAR ESTOS PARA TU SITIO WEB ESPECÍFICO (ej. shape.com)!!! *****
                 const SELECTOR_TITULO = 'h1#article-heading_1-0';
                 const SELECTOR_CONTENIDO = 'div#article-body_1-0';
-                // const SELECTOR_FECHA = 'span.tu-clase-de-fecha';
-                // const SELECTOR_AUTOR = 'a.tu-clase-de-autor';
-
                 pageLog.info(`      Usando selector de título: "${SELECTOR_TITULO}"`);
                 pageLog.info(`      Usando selector de contenido: "${SELECTOR_CONTENIDO}"`);
 
@@ -111,47 +102,35 @@ Actor.main(async () => {
                             textoContenido = elementoContenido.innerText.trim();
                         }
                     }
-                    // const fecha = document.querySelector(selFecha)?.innerText.trim();
-                    // const autor = document.querySelector(selAutor)?.innerText.trim();
-                    return {
-                        titulo: titulo,
-                        contenido: textoContenido,
-                        // fechaPublicacion: fecha,
-                        // autor: autor
-                    };
+                    return { titulo, contenido };
                 }, SELECTOR_TITULO, SELECTOR_CONTENIDO);
 
                 pageLog.info(`      Título encontrado: ${datosExtraidos.titulo}`);
                 pageLog.info(`      Contenido encontrado (primeros 100 caracteres): ${datosExtraidos.contenido?.substring(0, 100)}...`);
 
                 if (datosExtraidos.titulo || datosExtraidos.contenido) {
-                    await Actor.pushData({
+                    await Apify.Actor.pushData({ // Usar Apify.Actor.pushData
                         urlDelArticulo: urlActual,
                         tituloDelArticulo: datosExtraidos.titulo,
                         textoDelArticulo: datosExtraidos.contenido?.trim(),
-                        // fecha: datosExtraidos.fechaPublicacion,
-                        // autor: datosExtraidos.autor,
                     });
                     pageLog.info(`   💾 ¡Información guardada para: ${datosExtraidos.titulo || urlActual}!`);
                 } else {
                     pageLog.warning(`      ⚠️ No pude extraer título o contenido de esta página de artículo: ${urlActual}`);
                     const htmlDePaginaDetalle = await page.content();
                     const debugKey = `DEBUG_PAGINA_DETALLE_HTML_${request.uniqueKey.replace(/[\/:\.]/g, '_')}`;
-                    await Actor.setValue(debugKey, htmlDePaginaDetalle, { contentType: 'text/html' });
+                    await Apify.Actor.setValue(debugKey, htmlDePaginaDetalle, { contentType: 'text/html' }); // Usar Apify.Actor.setValue
                     pageLog.info(`      (Guardé el HTML de esta página de detalle como "${debugKey}" para que lo revises en el Key-Value Store de Apify)`);
                 }
             }
         },
 
-        // Qué hacer si una página da un error al cargarla
-        // Usamos 'log' desestructurado aquí también
         handleFailedRequestFunction: async ({ request, error, log: pageLog }) => {
             pageLog.error(`❌ ¡Ups! Falló la visita a ${request.url} (Etiqueta: ${request.userData.tipoDePagina}): ${error.message}`);
         },
     });
 
-    // 5. PONER AL NAVEGADOR ROBOT A TRABAJAR
-    Actor.log.info('▶️  El navegador robot va a empezar a visitar las páginas...');
+    Apify.Actor.log.info('▶️  El navegador robot va a empezar a visitar las páginas...');
     await navegadorRobot.run();
-    Actor.log.info('🏁 ¡Trabajo terminado por el navegador robot!');
+    Apify.Actor.log.info('🏁 ¡Trabajo terminado por el navegador robot!');
 });
